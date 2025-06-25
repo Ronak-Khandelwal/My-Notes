@@ -1,5 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart' ;
+import 'package:flutter/material.dart';
+import 'dart:developer' as devtools;
+
+import 'package:mynotes/constants/routes.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -26,68 +29,62 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
-   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
+      appBar: AppBar(title: const Text('Login')),
       body: Column(
-                  children: [
-                    TextField(
-                      controller: _email,
-                      enableSuggestions: false,
-                      autocorrect: false,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        hintText: "Enter Your Email Here",
-                      ),
-                    ),
-                    TextField(
-                      controller: _password,
-                      obscureText: true,
-                      enableSuggestions: false,
-                      autocorrect: false,
-                      decoration: InputDecoration(
-                        hintText: "Enter Your Password Here",
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        final email = _email.text;
-                        final password = _password.text;
-      
-                        
-      
-                        try{
-                          final UserCredential = await FirebaseAuth.instance
-                            .signInWithEmailAndPassword(
-                              email: email,
-                              password: password,
-                            );
-                        print(UserCredential);
-                        } on FirebaseAuthException catch(e){
-      
-                          
-                          if(e.code == 'invalid-credential'){
-                            print("Invalid Credential");
-                          } 
-                          else {
-                            print("Something wrong happened");
-                            print(e.code);
-                          }
-                        }
-                      },
-                      child: const Text("Login"),
-                    ),
-                    TextButton(onPressed: (){
-                      Navigator.of(context).pushNamedAndRemoveUntil('/register/', (route)=> false);
-                    }, child: Text("New  User?, Register Here!"))
-                  ],
-                  
-                ),
+        children: [
+          TextField(
+            controller: _email,
+            enableSuggestions: false,
+            autocorrect: false,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(hintText: "Enter Your Email Here"),
+          ),
+          TextField(
+            controller: _password,
+            obscureText: true,
+            enableSuggestions: false,
+            autocorrect: false,
+            decoration: InputDecoration(hintText: "Enter Your Password Here"),
+          ),
+          TextButton(
+            onPressed: () async {
+              final email = _email.text;
+              final password = _password.text;
+
+              try {
+                // ignore: non_constant_identifier_names
+                final UserCredential = await FirebaseAuth.instance
+                    .signInWithEmailAndPassword(
+                      email: email,
+                      password: password,
+                    );
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/notes/', (route) => false);
+              } on FirebaseAuthException catch (e) {
+                if (e.code == 'invalid-credential') {
+                  devtools.log("Invalid Credential");
+                } else {
+                  devtools.log("Something wrong happened");
+                  devtools.log(e.code);
+                }
+              }
+            },
+            child: const Text("Login"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil(registerRoute, (route) => false);
+            },
+            child: Text("New  User?, Register Here!"),
+          ),
+        ],
+      ),
     );
   }
-
-   
 }
