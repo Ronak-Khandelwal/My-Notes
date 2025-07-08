@@ -1,8 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as devtools;
-
 import 'package:mynotes/constants/routes.dart';
+import 'package:mynotes/services/auth/auth_exception.dart';
+import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/utilities/show_error_dialog.dart';
 
 class LoginView extends StatefulWidget {
@@ -57,13 +56,12 @@ class _LoginViewState extends State<LoginView> {
 
               try {
                 // ignore: non_constant_identifier_names
-                 await FirebaseAuth.instance
-                    .signInWithEmailAndPassword(
-                      email: email,
-                      password: password,
-                    );
-                final user = FirebaseAuth.instance.currentUser;
-                if (user?.emailVerified ?? false) {
+                await AuthService.firebase().login(
+                  email: email,
+                  password: password,
+                );
+                final user = AuthService.firebase().currentUser;
+                if (user?.isEmailVerified ?? false) {
                   Navigator.of(
                     context,
                   ).pushNamedAndRemoveUntil('/notes/', (route) => false);
@@ -72,18 +70,11 @@ class _LoginViewState extends State<LoginView> {
                     context,
                   ).pushNamedAndRemoveUntil(verifyEmailRoute, (route) => false);
                 }
-              } on FirebaseAuthException catch (e) {
-                if (e.code == 'invalid-credential') {
-                  await showErrorDialog(context, 'Invalid Credential');
-                } else {
-                  await showErrorDialog(context, 'something went wrong');
-                  devtools.log(e.code);
-                }
-                ;
-              } catch (e) {
-                await showErrorDialog(context, e.toString());
+              } on InvalidCredentialAuthException {
+                await showErrorDialog(context, 'Invalid Credential');
+              } on GenericAuthException {
+                await showErrorDialog(context, 'something went wrong');
               }
-              ;
             },
             child: const Text("Login"),
           ),
