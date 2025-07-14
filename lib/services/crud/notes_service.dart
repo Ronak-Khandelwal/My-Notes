@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' show join;
@@ -13,17 +13,17 @@ class NotesService {
 
   static final NotesService _shared = NotesService._sharedInstance();
   NotesService._sharedInstance() {
-    _noteStreamController = StreamController<List<DatabaseNote>>.broadcast(
+    _notesStreamController = StreamController<List<DatabaseNote>>.broadcast(
       onListen: () {
-        _noteStreamController.sink.add(_notes);
+        _notesStreamController.sink.add(_notes);
       },
     );
   }
   factory NotesService() => _shared;
 
-  late final StreamController<List<DatabaseNote>> _noteStreamController;
+  late final StreamController<List<DatabaseNote>> _notesStreamController;
 
-  Stream<List<DatabaseNote>> get allNotes => _noteStreamController.stream;
+  Stream<List<DatabaseNote>> get allNotes => _notesStreamController.stream;
 
   Future<DatabaseUser> getOrCreateUser({required String email}) async {
     try {
@@ -40,7 +40,7 @@ class NotesService {
   Future<void> _cacheNotes() async {
     final allNotes = await getAllNotes();
     _notes = allNotes.toList();
-    _noteStreamController.add(_notes);
+    _notesStreamController.add(_notes);
   }
 
   Future<DatabaseNote> updateNote({
@@ -63,7 +63,7 @@ class NotesService {
       final updatedNote = await getNote(id: note.id);
       _notes.removeWhere((note) => note.id == updatedNote.id);
       _notes.add(updatedNote);
-      _noteStreamController.add(_notes);
+      _notesStreamController.add(_notes);
       return updatedNote;
     }
   }
@@ -79,7 +79,7 @@ class NotesService {
   Future<DatabaseNote> getNote({required int id}) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
-    final notes = await db.query(noteTable, limit: 1, whereArgs: [id]);
+    final notes = await db.query(noteTable, limit: 1, where: 'id = ?', whereArgs: [id]);
 
     if (notes.isEmpty) {
       throw CouldNotFindNotes();
@@ -87,7 +87,7 @@ class NotesService {
       final note = DatabaseNote.fromRow(notes.first);
       _notes.removeWhere((note) => note.id == id);
       _notes.add(note);
-      _noteStreamController.add(_notes);
+      _notesStreamController.add(_notes);
       return note;
     }
   }
@@ -97,7 +97,7 @@ class NotesService {
     final db = _getDatabaseOrThrow();
     final numberOfDeletions = await db.delete(noteTable);
     _notes = [];
-    _noteStreamController.add(_notes);
+    _notesStreamController.add(_notes);
     return numberOfDeletions;
   }
 
@@ -107,12 +107,13 @@ class NotesService {
     final deletedCount = await db.delete(
       noteTable,
       where: 'id =  ?',
-      whereArgs: [id],
+      whereArgs: [id] ,
     );
     if (deletedCount == 0) {
       throw CouldNotDeleteNote();
     } else {
       _notes.removeWhere((note) => note.id == id);
+      _notesStreamController.add(_notes);
     }
   }
 
@@ -140,7 +141,7 @@ class NotesService {
     );
 
     _notes.add(note);
-    _noteStreamController.add(_notes);
+    _notesStreamController.add(_notes);
     return note;
   }
 
