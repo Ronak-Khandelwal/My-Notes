@@ -4,6 +4,8 @@ import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/enums/menu_action.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/services/crud/notes_service.dart';
+import 'package:mynotes/utilities/dialogs/logout_dialog.dart';
+import 'package:mynotes/views/notes/notes_list_view.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -96,29 +98,13 @@ class _NotesViewState extends State<NotesView> with RouteAware {
                       if (notesSnapshot.hasData) {
                         final allNotes =
                             notesSnapshot.data as List<DatabaseNote>;
-                        
                         final user = snapshot.data as DatabaseUser?;
                         final userId = user?.id;
-                        
-                        final userNotes =
-                            userId == null
-                                ? []
-                                : allNotes
-                                    .where((note) => note.userId == userId)
-                                    .toList();
-                        print('Total Notes for user: ${userNotes.length}');
-                        return ListView.builder(
-                          itemCount: userNotes.length,
-                          itemBuilder: (context, index) {
-                            final note = userNotes[index];
-                            return ListTile(
-                              title: Text(
-                                note.text,
-                                maxLines: 1,
-                                softWrap: true,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
+                        final userNotes = userId == null ? <DatabaseNote>[] : allNotes.where((note) => note.userId == userId).toList();
+                        return NotesListView(
+                          notes: userNotes,
+                          onDeleteNote: (note) async {
+                            await _notesService.deleteNote(id: note.id);
                           },
                         );
                       } else {
@@ -139,28 +125,4 @@ class _NotesViewState extends State<NotesView> with RouteAware {
   }
 }
 
-Future<bool> showLogOutDialog(BuildContext context) {
-  return showDialog<bool>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Log Out'),
-        content: const Text('Are you sure you want to Log out?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(false);
-            },
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(true);
-            },
-            child: const Text('Logout'),
-          ),
-        ],
-      );
-    },
-  ).then((value) => value ?? false);
-}
+
