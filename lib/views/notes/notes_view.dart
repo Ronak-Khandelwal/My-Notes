@@ -45,7 +45,6 @@ class _NotesViewState extends State<NotesView> with RouteAware {
     setState(() {});
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,24 +93,35 @@ class _NotesViewState extends State<NotesView> with RouteAware {
                   switch (notesSnapshot.connectionState) {
                     case ConnectionState.waiting:
                     case ConnectionState.active:
-                      if(notesSnapshot.hasData){
-                        final allNotes = notesSnapshot.data as List<DatabaseNote>;
-                        // Get the current user's database ID from the outer FutureBuilder snapshot
+                      if (notesSnapshot.hasData) {
+                        final allNotes =
+                            notesSnapshot.data as List<DatabaseNote>;
+                        
                         final user = snapshot.data as DatabaseUser?;
                         final userId = user?.id;
-                        // Filter notes to only show those belonging to the current user
-                        final userNotes = userId == null ? [] : allNotes.where((note) => note.userId == userId).toList();
+                        
+                        final userNotes =
+                            userId == null
+                                ? []
+                                : allNotes
+                                    .where((note) => note.userId == userId)
+                                    .toList();
                         print('Total Notes for user: ${userNotes.length}');
                         return ListView.builder(
                           itemCount: userNotes.length,
-                          itemBuilder: (context,index){
+                          itemBuilder: (context, index) {
                             final note = userNotes[index];
-                            return  ListTile(
-                              title: Text(note.text),
+                            return ListTile(
+                              title: Text(
+                                note.text,
+                                maxLines: 1,
+                                softWrap: true,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             );
-                          }
+                          },
                         );
-                      } else{
+                      } else {
                         return const CircularProgressIndicator();
                       }
                     default:
