@@ -54,9 +54,12 @@ class NotesService {
     await getNote(id: note.id);
 
     final updatesCount = await db.update(noteTable, {
-      textColumn: text,
-      isSyncedWithCloudColumn: 0,
-    });
+      noteTextColumn: text,
+      
+      noteIsSyncedWithCloudColumn: 0,
+    }, where: 'id = ?',
+    whereArgs: [note.id],);
+    await _cacheNotes();
 
     if (updatesCount == 0) {
       throw CouldNotUpdateNotes();
@@ -128,9 +131,9 @@ class NotesService {
 
     const text = '';
     final noteId = await db.insert(noteTable, {
-      userIdColumn: owner.id,
-      textColumn: text,
-      isSyncedWithCloudColumn: 1,
+      noteUserIdColumn: owner.id,
+      noteTextColumn: text,
+      noteIsSyncedWithCloudColumn: 1,
     });
 
     final note = DatabaseNote(
@@ -177,7 +180,7 @@ class NotesService {
     }
 
     final userId = await db.insert(userTable, {
-      emailColumn: email.toLowerCase(),
+      userEmailColumn: email.toLowerCase(),
     });
 
     return DatabaseUser(id: userId, email: email);
@@ -248,8 +251,9 @@ class DatabaseUser {
   const DatabaseUser({required this.id, required this.email});
 
   DatabaseUser.fromRow(Map<String, Object?> map)
-    : id = map[idColumn] as int,
-      email = map[emailColumn] as String;
+      : assert(map[userIdColumn] != null && map[userEmailColumn] != null, 'Invalid user row: id or email is null'),
+        id = (map[userIdColumn] as int),
+        email = (map[userEmailColumn] as String);
 
   @override
   String toString() => 'person, ID = $id , email = $email';
@@ -275,11 +279,10 @@ class DatabaseNote {
   });
 
   DatabaseNote.fromRow(Map<String, Object?> map)
-    : id = map[idColumn] as int,
-      userId = map[userIdColumn] as int,
-      text = map[textColumn] as String,
-      isSyncedWithCloud =
-          (map[isSyncedWithCloudColumn] as int) == 1 ? true : false;
+    : id = map[noteIdColumn] as int,
+      userId = map[noteUserIdColumn] as int,
+      text = map[noteTextColumn] as String,
+      isSyncedWithCloud = (map[noteIsSyncedWithCloudColumn] as int) == 1 ? true : false;
 
   @override
   String toString() =>
@@ -310,8 +313,11 @@ const createUserTable = '''CREATE TABLE IF NOT EXISTS"user" (
 const dbName = 'notes.db';
 const noteTable = 'note';
 const userTable = 'user';
-const idColumn = 'id';
-const emailColumn = 'email';
-const userIdColumn = 'user_id';
-const textColumn = 'text';
-const isSyncedWithCloudColumn = 'is_synced_with_cloud';
+// USER TABLE COLUMNS
+const userIdColumn = 'ID';
+const userEmailColumn = 'email';
+// NOTE TABLE COLUMNS
+const noteIdColumn = 'id';
+const noteUserIdColumn = 'user_id';
+const noteTextColumn = 'text';
+const noteIsSyncedWithCloudColumn = 'is_synced_with_cloud';
