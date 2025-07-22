@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' show join;
@@ -53,13 +53,15 @@ class NotesService {
 
     await getNote(id: note.id);
 
-    final updatesCount = await db.update(noteTable, {
-      noteTextColumn: text,
-      
-      noteIsSyncedWithCloudColumn: 0,
-    }, where: 'id = ?',
-    whereArgs: [note.id],);
-    await _cacheNotes();
+    final updatesCount = await db.update(
+      noteTable,
+      {
+        textColumn: text,
+        isSyncedWithCloudColumn: 0,
+      },
+      where: 'id = ?',
+      whereArgs: [note.id],
+    );
 
     if (updatesCount == 0) {
       throw CouldNotUpdateNotes();
@@ -69,6 +71,7 @@ class NotesService {
       _notes.add(updatedNote);
       _notesStreamController.add(_notes);
       return updatedNote;
+      
     }
   }
 
@@ -131,17 +134,18 @@ class NotesService {
     }
 
     const text = '';
+    
     final noteId = await db.insert(noteTable, {
-      noteUserIdColumn: owner.id,
-      noteTextColumn: text,
-      noteIsSyncedWithCloudColumn: 1,
+      useridColumn: owner.id,
+      textColumn: text,
+      isSyncedWithCloudColumn: 0,
     });
 
     final note = DatabaseNote(
       id: noteId,
       userId: owner.id,
       text: text,
-      isSyncedWithCloud: true,
+      isSyncedWithCloud: false,
     );
 
     _notes.add(note);
@@ -181,7 +185,7 @@ class NotesService {
     }
 
     final userId = await db.insert(userTable, {
-      userEmailColumn: email.toLowerCase(),
+      emailColumn: email.toLowerCase(),
     });
 
     return DatabaseUser(id: userId, email: email);
@@ -252,12 +256,10 @@ class DatabaseUser {
   const DatabaseUser({required this.id, required this.email});
 
   DatabaseUser.fromRow(Map<String, Object?> map)
-      : assert(map[userIdColumn] != null && map[userEmailColumn] != null, 'Invalid user row: id or email is null'),
-        id = (map[userIdColumn] as int),
-        email = (map[userEmailColumn] as String);
+      : id = map[idColumn] as int,
+        email = map[emailColumn] as String;
 
-  @override
-  String toString() => 'person, ID = $id , email = $email';
+
 
   @override
   bool operator ==(covariant DatabaseUser other) => id == other.id;
@@ -280,14 +282,12 @@ class DatabaseNote {
   });
 
   DatabaseNote.fromRow(Map<String, Object?> map)
-    : id = map[noteIdColumn] as int,
-      userId = map[noteUserIdColumn] as int,
-      text = map[noteTextColumn] as String,
-      isSyncedWithCloud = (map[noteIsSyncedWithCloudColumn] as int) == 1 ? true : false;
+    : id = map[idColumn] as int,
+      userId = map[useridColumn] as int,
+      text = map[textColumn] as String,
+      isSyncedWithCloud = (map[isSyncedWithCloudColumn] as int) == 1 ? true : false;
 
-  @override
-  String toString() =>
-      'Note , ID = $id , userId = $userId, isSyncedWithCloud = $isSyncedWithCloud text = $text';
+
 
   @override
   bool operator ==(covariant DatabaseNote other) => id == other.id;
@@ -302,23 +302,20 @@ const createNoteTable = '''CREATE TABLE IF NOT EXISTS "note" (
 	"text"	TEXT,
 	"is_synced_with_cloud"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("id" AUTOINCREMENT),
-	FOREIGN KEY("user_id") REFERENCES "user"("ID")
+	FOREIGN KEY("user_id") REFERENCES "user"("id")
 );''';
 
 const createUserTable = '''CREATE TABLE IF NOT EXISTS"user" (
-	"ID"	INTEGER NOT NULL,
+	"id"	INTEGER NOT NULL,
 	"email"	TEXT NOT NULL UNIQUE,
-	PRIMARY KEY("ID" AUTOINCREMENT)
+	PRIMARY KEY("id" AUTOINCREMENT)
 );''';
 
 const dbName = 'notes.db';
 const noteTable = 'note';
 const userTable = 'user';
-// USER TABLE COLUMNS
-const userIdColumn = 'ID';
-const userEmailColumn = 'email';
-// NOTE TABLE COLUMNS
-const noteIdColumn = 'id';
-const noteUserIdColumn = 'user_id';
-const noteTextColumn = 'text';
-const noteIsSyncedWithCloudColumn = 'is_synced_with_cloud';
+const idColumn = 'id';
+const emailColumn = 'email';
+const useridColumn = 'user_id';
+const textColumn = 'text';
+const isSyncedWithCloudColumn = 'is_synced_with_cloud';

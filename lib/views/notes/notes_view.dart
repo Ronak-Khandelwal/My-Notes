@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/enums/menu_action.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
@@ -11,12 +10,11 @@ class NotesView extends StatefulWidget {
   const NotesView({super.key});
 
   @override
-  State<NotesView> createState() => _NotesViewState();
+  _NotesViewState createState() => _NotesViewState();
 }
 
-final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
-class _NotesViewState extends State<NotesView> with RouteAware {
+class _NotesViewState extends State<NotesView>  {
   late final NotesService _notesService;
 
   String get userEmail => AuthService.firebase().currentUser!.email!;
@@ -24,28 +22,9 @@ class _NotesViewState extends State<NotesView> with RouteAware {
   @override
   void initState() {
     _notesService = NotesService();
-    _notesService.open();
-    _notesService.getOrCreateUser(email: userEmail);
     super.initState();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
-  }
-
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
-
-  @override
-  void didPopNext() {
-    // Called when coming back to this screen
-    setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,9 +34,10 @@ class _NotesViewState extends State<NotesView> with RouteAware {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.of(context).pushNamed(newNoteRoute);
-              setState(() {});
+              Navigator.of(context).pushNamed(createOrUpdateNoteRoute);
+              
             },
+            
             icon: const Icon(Icons.add),
           ),
           PopupMenuButton<MenuAction>(
@@ -68,7 +48,7 @@ class _NotesViewState extends State<NotesView> with RouteAware {
                   if (shouldLogout) {
                     await AuthService.firebase().logout();
                     Navigator.of(
-                      context,
+                      context
                     ).pushNamedAndRemoveUntil(loginRoute, (_) => false);
                   }
               }
@@ -91,21 +71,32 @@ class _NotesViewState extends State<NotesView> with RouteAware {
             case ConnectionState.done:
               return StreamBuilder(
                 stream: _notesService.allNotes,
-                builder: (context, notesSnapshot) {
-                  switch (notesSnapshot.connectionState) {
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
                     case ConnectionState.active:
-                      if (notesSnapshot.hasData) {
+                      if (snapshot.hasData) {
                         final allNotes =
-                            notesSnapshot.data as List<DatabaseNote>;
-                        final user = snapshot.data as DatabaseUser?;
-                        final userId = user?.id;
-                        final userNotes = userId == null ? <DatabaseNote>[] : allNotes.where((note) => note.userId == userId).toList();
+                            snapshot.data as List<DatabaseNote>;
+                        // final user = snapshot.data as DatabaseUser;
+                        // final userId = user.id;
+                        // final userNotes =
+                        //     userId == null
+                        //         ? <DatabaseNote>[]
+                        //         : allNotes
+                        //             .where((note) => note.userId == userId)
+                        //             .toList();
                         return NotesListView(
-                          notes: userNotes,
+                          notes: allNotes,
                           onDeleteNote: (note) async {
                             await _notesService.deleteNote(id: note.id);
-                          },
+                          }, onTap: (note) async{ 
+                            Navigator.of(context).pushNamed(
+                              createOrUpdateNoteRoute,
+                              arguments: note,
+                            );
+                            setState(() {});
+                           },
                         );
                       } else {
                         return const CircularProgressIndicator();
@@ -124,5 +115,3 @@ class _NotesViewState extends State<NotesView> with RouteAware {
     );
   }
 }
-
-
