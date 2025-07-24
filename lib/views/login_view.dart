@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mynotes/constants/routes.dart';
 import 'package:mynotes/services/auth/auth_exception.dart';
-import 'package:mynotes/services/auth/auth_service.dart';
+import 'package:mynotes/services/auth/bloc/auth_bloc.dart';
+import 'package:mynotes/services/auth/bloc/auth_event.dart';
 import 'package:mynotes/utilities/dialogs/error_dialogs.dart';
 
 
@@ -58,21 +60,9 @@ class _LoginViewState extends State<LoginView> {
               final password = _password.text;
 
               try {
-                // ignore: non_constant_identifier_names
-                await AuthService.firebase().login(
-                  email: email,
-                  password: password,
+                context.read<AuthBloc>().add(
+                  AuthEventLogIn(email, password,),
                 );
-                final user = AuthService.firebase().currentUser;
-                if (user?.isEmailVerified ?? false) {
-                  Navigator.of(
-                    context,
-                  ).pushNamedAndRemoveUntil('/notes/', (route) => false);
-                } else {
-                  Navigator.of(
-                    context,
-                  ).pushNamedAndRemoveUntil(verifyEmailRoute, (route) => false);
-                }
               } on InvalidCredentialAuthException {
                 await showErrorDialog(context, 'Invalid Credential');
               } on GenericAuthException {
