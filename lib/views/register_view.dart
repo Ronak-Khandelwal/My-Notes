@@ -50,6 +50,11 @@ class _RegisterViewState extends State<RegisterView> {
         }
       },
       child: SingleChildScrollView(
+        child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 600,
+          maxHeight: MediaQuery.of(context).size.height,
+        ),
         child: Scaffold(
           appBar: AppBar(title: Text("Register")),
           body: Padding(
@@ -105,6 +110,6 @@ class _RegisterViewState extends State<RegisterView> {
           ),
         ),
       ),
-    );
+    ));
   }
 }

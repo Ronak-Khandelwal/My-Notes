@@ -26,6 +26,20 @@ class FirebaseAuthProvider implements AuthProvider {
       );
       final user = currentUser;
       if (user != null) {
+        // Fetch Firebase ID token for API authentication
+        try {
+          final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+          if (idToken != null) {
+            print('🔥 Firebase ID Token (New User): $idToken');
+            print('📝 Token length: ${idToken.length} characters');
+            print('🔑 Use this token in Authorization header: Bearer $idToken');
+          } else {
+            print('⚠️ Could not fetch Firebase ID token for new user');
+          }
+        } catch (tokenError) {
+          print('❌ Error fetching Firebase token for new user: $tokenError');
+        }
+        
         return user;
       } else {
         throw UserNotLoggedInAuthException();
@@ -67,6 +81,20 @@ class FirebaseAuthProvider implements AuthProvider {
       );
       final user = currentUser;
       if (user != null) {
+        // Fetch Firebase ID token for API authentication
+        try {
+          final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+          if (idToken != null) {
+            print('🔥 Firebase ID Token: $idToken');
+            print('📝 Token length: ${idToken.length} characters');
+            print('🔑 Use this token in Authorization header: Bearer $idToken');
+          } else {
+            print('⚠️ Could not fetch Firebase ID token');
+          }
+        } catch (tokenError) {
+          print('❌ Error fetching Firebase token: $tokenError');
+        }
+        
         return user;
       } else {
         throw UserNotLoggedInAuthException();

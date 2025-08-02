@@ -16,6 +16,11 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 600,
+          maxHeight: MediaQuery.of(context).size.height,
+        ),
       child: Scaffold(
         appBar: AppBar(title: const Text('E-mail Verification')),
         body: Column(
@@ -42,6 +47,6 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
           ],
         ),
       ),
-    );
+    ));
   }
 }

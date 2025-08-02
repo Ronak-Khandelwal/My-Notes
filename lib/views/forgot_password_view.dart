@@ -32,7 +32,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) async {
-        if (state is AuthstateForgotpassword) {
+        if (state is AuthStateForgotPassword) {
           if (state.hasSentEmail) {
             _controller.clear();
             await showPasswordResetSentDialog(context);
@@ -47,6 +47,11 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
         }
       },
       child: SingleChildScrollView(
+        child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 600,
+          maxHeight: MediaQuery.of(context).size.height,
+        ),
         child: Scaffold(
           appBar: AppBar(title: const Text('Forgot Password')),
           body: Padding(
@@ -86,6 +91,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
           ),
         ),
       ),
-    );
+    ));
   }
 }

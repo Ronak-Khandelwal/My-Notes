@@ -50,6 +50,11 @@ class _LoginViewState extends State<LoginView> {
         
       },
       child: SingleChildScrollView(
+         child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 600,
+          maxHeight: MediaQuery.of(context).size.height,
+        ),
         child: Scaffold(
           appBar: AppBar(title: const Text('Login')),
           body: Padding(
@@ -97,6 +102,6 @@ class _LoginViewState extends State<LoginView> {
           ),
         ),
       ),
-    );
+    ));
   }
 }

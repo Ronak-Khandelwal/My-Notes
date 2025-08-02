@@ -16,10 +16,9 @@ class LoadingScreen {
     required BuildContext context,
     required String text,
   }){
-    if(controller?.update(text)?? false){
+    if(controller?.update(text) ?? false){
       return;
-
-    }else{
+    } else {
       controller = showOverlay(context: context, text: text);
     }
   }
@@ -41,8 +40,6 @@ class LoadingScreen {
     final size = renderBox.size;
 
     final overlay = OverlayEntry(
-
-      
       builder: (context) {
         return Material(
           color: Colors.black.withAlpha(150),
@@ -90,18 +87,20 @@ class LoadingScreen {
       },
     );
   
-  state?.insert(overlay);
-  return LoadingScreenController(close: (){
-    _text.close();
-    overlay.remove();
-    return true;
-  }, 
-  update: (text){
-    if(!_text.isClosed){
-    _text.add(text);
-    return true;
+    state?.insert(overlay);
+    return LoadingScreenController(
+      close: () {
+        _text.close();
+        overlay.remove();
+        return true;
+      }, 
+      update: (text) {
+        if (!_text.isClosed) {
+          _text.add(text);
+          return true;
+        }
+        return false;
+      },
+    );
   }
-  return false;
-  },
-  );
-  }}
+}

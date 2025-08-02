@@ -6,7 +6,7 @@ typedef UpdateLoadingScreen = bool Function(String text);
 @immutable
 class LoadingScreenController {
   final CloseLoadingScreen close;
-  final UpdateSelectionIntent update;
+  final UpdateLoadingScreen update;
 
   const LoadingScreenController({required this.close, required this.update,});
 }
